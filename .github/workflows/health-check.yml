@@ -11,6 +11,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Check product URLs
+        id: check
         run: |
           python3 << 'PYEOF'
           import urllib.request, json
@@ -94,6 +95,3 @@ jobs:
           git add README.md
           git diff --quiet || git commit -m "Update status $(date -u '+%Y-%m-%d %H:%M')" && git push origin main 2>&1 || echo "No changes"
       
-      - name: Alert on failure
-        if: steps.check.outputs.all_ok != 'True'
-        run: echo "::warning title=Product Down::Some products returned non-200 status"
