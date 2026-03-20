@@ -4,6 +4,10 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pages: read
+
 jobs:
   health-check:
     runs-on: ubuntu-latest
@@ -13,7 +17,7 @@ jobs:
       - name: Check and update status
         run: |
           python3 << 'PYEOF'
-          import urllib.request, json, datetime
+          import urllib.request, datetime
           products = [
               ("miaozhuan-web", "秒转", "https://rickzeke.github.io/miaozhuan-web/"),
               ("social-game-web", "社交游戏", "https://rickzeke.github.io/social-game-web/"),
@@ -35,35 +39,22 @@ jobs:
                   code = resp.getcode()
                   if code == 200:
                       lines.append(f"- :white_check_mark: UP {name}")
-                      rows.append(f"| {name} | [{url}]({url}) | ✅ |")
+                      rows.append(f"| {name} | [{url}]({url}) | :white_check_mark: |")
                   else:
                       lines.append(f"- :x: DOWN({code}) {name}")
-                      rows.append(f"| {name} | [{url}]({url}) | ❌ |")
+                      rows.append(f"| {name} | [{url}]({url}) | :x: |")
                       all_ok = False
               except Exception as e:
-                  lines.append(f"- :x: ERROR {name}: {str(e)}")
-                  rows.append(f"| {name} | [{url}]({url}) | ❌ |")
+                  lines.append(f"- :x: ERROR {name}")
+                  rows.append(f"| {name} | [{url}]({url}) | :x: |")
                   all_ok = False
           
-          emoji = "✅" if all_ok else "❌"
+          emoji = ":white_check_mark:" if all_ok else ":x:"
           status = "All Products Healthy" if all_ok else "Products Down!"
           
-          readme = f"""# Product Health Monitor
-          
-          {emoji} **{status}** — Last checked: {now}
-          
-          ## Status
-          """
-          readme += "\n".join(lines) + """
-          
-          ## Products
-          | Product | URL | Status |
-          |---------|-----|--------|
-          """
-          readme += "\n".join(rows) + """
-          
-          *Auto-checked hourly via GitHub Actions*
-          """
+          readme = f"# Product Health Monitor\n\n{emoji} **{status}** -- Last checked: {now}\n\n## Status\n"
+          readme += "\n".join(lines) + "\n\n## Products\n| Product | URL | Status |\n|---------|-----|--------|\n"
+          readme += "\n".join(rows) + "\n\n*Auto-checked hourly via GitHub Actions*\n"
           
           with open("README.md", "w") as f:
               f.write(readme)
@@ -72,8 +63,8 @@ jobs:
       
       - name: Commit and push
         run: |
-          git config user.name "Health Monitor"
-          git config user.email "monitor@rickzeke.github"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add README.md
-          git commit -m "Update status $(date -u '+%Y-%m-%d %H:%M')" || echo "No commit needed"
+          git commit -m "Update status $(date -u '+%Y-%m-%d %H:%M')" || echo "No changes"
           git push origin main 2>&1 || echo "Push failed"
