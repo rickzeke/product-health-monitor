@@ -10,11 +10,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Check product URLs
-        id: check
+      - name: Check and update status
         run: |
           python3 << 'PYEOF'
-          import urllib.request, json
+          import urllib.request, json, datetime
           products = [
               ("miaozhuan-web", "秒转", "https://rickzeke.github.io/miaozhuan-web/"),
               ("social-game-web", "社交游戏", "https://rickzeke.github.io/social-game-web/"),
@@ -25,6 +24,7 @@ jobs:
               ("ai-life-simulator-web", "AI生活模拟器", "https://rickzeke.github.io/ai-life-simulator-web/"),
               ("multi-platform-publisher-web", "多平台发布", "https://rickzeke.github.io/multi-platform-publisher-web/"),
           ]
+          now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
           all_ok = True
           lines = []
           rows = []
@@ -33,59 +33,41 @@ jobs:
                   req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
                   resp = urllib.request.urlopen(req, timeout=10)
                   code = resp.getcode()
-                  status = "UP" if code == 200 else f"DOWN({code})"
-                  emoji = ":white_check_mark:" if code == 200 else ":x:"
-                  if code != 200: all_ok = False
+                  if code == 200:
+                      lines.append(f"- :white_check_mark: UP {name}")
+                      rows.append(f"| {name} | [{url}]({url}) | ✅ |")
+                  else:
+                      lines.append(f"- :x: DOWN({code}) {name}")
+                      rows.append(f"| {name} | [{url}]({url}) | ❌ |")
+                      all_ok = False
               except Exception as e:
-                  status = f"ERROR"
-                  emoji = ":x:"
+                  lines.append(f"- :x: ERROR {name}: {str(e)}")
+                  rows.append(f"| {name} | [{url}]({url}) | ❌ |")
                   all_ok = False
-              lines.append(f"- {emoji} {status} {name}")
-              rows.append(f"| {name} | [{url}]({url}) | {'✅' if all_ok and status == 'UP' else '❌'} |")
           
-          with open("status.json", "w") as f:
-              json.dump({"all_ok": all_ok, "lines": lines, "rows": rows}, f)
-          PYEOF
-      
-      - name: Update status page
-        run: |
-          python3 << 'PYEOF'
-          import json, datetime
-          now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-          d = json.load(open("status.json"))
-          all_ok = d["all_ok"]
           emoji = "✅" if all_ok else "❌"
-          status_text = "All Products Healthy" if all_ok else "Products Down!"
-          
-          lines = d["lines"]
-          rows = d["rows"]
+          status = "All Products Healthy" if all_ok else "Products Down!"
           
           readme = f"""# Product Health Monitor
           
-          {emoji} **{status_text}** — Last checked: {now}
+          {emoji} **{status}** — Last checked: {now}
           
           ## Status
           """
-          for l in lines:
-              readme += l + "\n"
-          
-          readme += """
+          readme += "\n".join(lines) + """
           
           ## Products
           | Product | URL | Status |
           |---------|-----|--------|
           """
-          for r in rows:
-              readme += r + "\n"
-          
-          readme += """
+          readme += "\n".join(rows) + """
           
           *Auto-checked hourly via GitHub Actions*
           """
           
           with open("README.md", "w") as f:
               f.write(readme)
-          print("README updated:", "healthy" if all_ok else "UNHEALTHY")
+          print(f"Updated: {status}")
           PYEOF
       
       - name: Commit and push
@@ -93,5 +75,5 @@ jobs:
           git config user.name "Health Monitor"
           git config user.email "monitor@rickzeke.github"
           git add README.md
-          git diff --quiet || git commit -m "Update status $(date -u '+%Y-%m-%d %H:%M')" && git push origin main 2>&1 || echo "No changes"
-      
+          git commit -m "Update status $(date -u '+%Y-%m-%d %H:%M')" || echo "No commit needed"
+          git push origin main 2>&1 || echo "Push failed"
