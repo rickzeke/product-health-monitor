@@ -1,7 +1,7 @@
 name: Product Health Monitor
 on:
   schedule:
-    - cron: '0 * * * *'  # Every hour
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -13,81 +13,106 @@ jobs:
       - name: Check product URLs
         id: check
         run: |
-          PRODUCTS=(
-            "miaozhuan-web|https://rickzeke.github.io/miaozhuan-web/"
-            "social-game-web|https://rickzeke.github.io/social-game-web/"
-            "ai-productivity-web|https://rickzeke.github.io/ai-productivity-web/"
-            "ai-prompt-pro-web|https://rickzeke.github.io/ai-prompt-pro-web/"
-            "ai-english-web|https://rickzeke.github.io/ai-english-web/"
-            "lyrics-sync-web|https://rickzeke.github.io/lyrics-sync-web/"
-            "ai-life-simulator-web|https://rickzeke.github.io/ai-life-simulator-web/"
-            "multi-platform-publisher-web|https://rickzeke.github.io/multi-platform-publisher-web/"
-          )
+          python3 << 'PYEOF'
+          import urllib.request
+          import json
           
-          ALL_OK=true
-          REPORT="## Product Health Report\n\n"
-          REPORT+="Checked at: $(date -u '+%Y-%m-%d %H:%M UTC')\n\n"
+          products = [
+              ("miaozhuan-web", "https://rickzeke.github.io/miaozhuan-web/"),
+              ("social-game-web", "https://rickzeke.github.io/social-game-web/"),
+              ("ai-productivity-web", "https://rickzeke.github.io/ai-productivity-web/"),
+              ("ai-prompt-pro-web", "https://rickzeke.github.io/ai-prompt-pro-web/"),
+              ("ai-english-web", "https://rickzeke.github.io/ai-english-web/"),
+              ("lyrics-sync-web", "https://rickzeke.github.io/lyrics-sync-web/"),
+              ("ai-life-simulator-web", "https://rickzeke.github.io/ai-life-simulator-web/"),
+              ("multi-platform-publisher-web", "https://rickzeke.github.io/multi-platform-publisher-web/"),
+          ]
           
-          for entry in "${PRODUCTS[@]}"; do
-            IFS='|' read -r name url <<< "$entry"
-            HTTP_CODE=$(curl -sI -o /dev/null -w "%{http_code}" "$url" --max-time 10)
-            if [ "$HTTP_CODE" = "200" ]; then
-              STATUS="✅ UP"
-              REPORT+="- $STATUS $name ($HTTP_CODE)\n"
-            else
-              STATUS="❌ DOWN"
-              REPORT+="- $STATUS $name (HTTP $HTTP_CODE) — $url\n"
-              ALL_OK=false
-            fi
-          done
+          all_ok = True
+          lines = []
+          lines.append("## Product Health Report\n")
+          lines.append(f"Checked at:  UTC\n\n")
           
-          echo "REPORT<<EOF" >> $GITHUB_OUTPUT
-          echo "$REPORT" >> $GITHUB_OUTPUT
-          echo "ALL_OK=$ALL_OK" >> $GITHUB_OUTPUT
+          for name, url in products:
+              try:
+                  req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                  resp = urllib.request.urlopen(req, timeout=10)
+                  code = resp.getcode()
+                  if code == 200:
+                      lines.append(f"- :white_check_mark: UP {name} ({code})\n")
+                  else:
+                      lines.append(f"- :x: DOWN {name} (HTTP {code}) - {url}\n")
+                      all_ok = False
+              except Exception as e:
+                  lines.append(f"- :x: DOWN {name} (ERROR: {str(e)}) - {url}\n")
+                  all_ok = False
+          
+          report = "".join(lines)
+          with open("report.txt", "w") as f:
+              f.write(report)
+          with open("all_ok.txt", "w") as f:
+              f.write(str(all_ok))
+          PYEOF
+          
+          REPORT=$(cat report.txt)
+          ALL_OK=$(cat all_ok.txt)
+          echo "report=$REPORT" >> $GITHUB_OUTPUT
           echo "all_ok=$ALL_OK" >> $GITHUB_OUTPUT
       
-      - name: Generate status badge
+      - name: Update status page
         run: |
-          ALL_OK=${{ steps.check.outputs.all_ok }}
-          if [ "$ALL_OK" = "true" ]; then
-            echo "✅ All products healthy"
-            echo "status=healthy" >> $GITHUB_ENV
-          else
-            echo "❌ Some products are down!"
-            echo "status=unhealthy" >> $GITHUB_ENV
-            echo "::warning title=Product Down::Some products returned non-200 status"
-          fi
-      
-      - name: Create status page
-        run: |
-          REPORT="${{ steps.check.outputs.report }}"
-          cat > README.md << PAGE
-          # Product Health Monitor
+          python3 << 'PYEOF'
+          import datetime
+          now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
           
-          $REPORT
+          all_ok_str = open("all_ok.txt").read().strip()
+          all_ok = all_ok_str == "True"
           
-          ## Live Status
-          ![Health](https://github.com/rickzeke/product-health-monitor/actions/workflows/health-check.yml/badge.svg)
+          status_emoji = "✅" if all_ok else "❌"
+          status_text = "All Products Healthy" if all_ok else "Products Down!"
           
-          ## Products
+          report = open("report.txt").read().replace("UTC\n", now + "\n")
+          
+          products = [
+              ("miaozhuan-web", "秒转", "https://rickzeke.github.io/miaozhuan-web/"),
+              ("social-game-web", "社交游戏", "https://rickzeke.github.io/social-game-web/"),
+              ("ai-productivity-web", "AI提示词管理", "https://rickzeke.github.io/ai-productivity-web/"),
+              ("ai-prompt-pro-web", "AI提示词优化", "https://rickzeke.github.io/ai-prompt-pro-web/"),
+              ("ai-english-web", "AI英语助手", "https://rickzeke.github.io/ai-english-web/"),
+              ("lyrics-sync-web", "歌词卡拉OK", "https://rickzeke.github.io/lyrics-sync-web/"),
+              ("ai-life-simulator-web", "AI生活模拟器", "https://rickzeke.github.io/ai-life-simulator-web/"),
+              ("multi-platform-publisher-web", "多平台发布", "https://rickzeke.github.io/multi-platform-publisher-web/"),
+          ]
+          
+          rows = ""
+          for key, name, url in products:
+              rows += f"| {name} | [{url}]({url}) | ✅ |\n"
+          
+          readme = f"""# Product Health Monitor
+          
+          {status_emoji} **{status_text}** — Last checked: {now}
+          
+          {report}
+          
+          ## Live Products
           | Product | URL | Status |
           |---------|-----|--------|
-          | 秒转 | https://rickzeke.github.io/miaozhuan-web/ | ✅ |
-          | 社交游戏 | https://rickzeke.github.io/social-game-web/ | ✅ |
-          | AI提示词管理 | https://rickzeke.github.io/ai-productivity-web/ | ✅ |
-          | AI提示词优化 | https://rickzeke.github.io/ai-prompt-pro-web/ | ✅ |
-          | AI英语助手 | https://rickzeke.github.io/ai-english-web/ | ✅ |
-          | 歌词卡拉OK | https://rickzeke.github.io/lyrics-sync-web/ | ✅ |
-          | AI生活模拟器 | https://rickzeke.github.io/ai-life-simulator-web/ | ✅ |
-          | 多平台发布 | https://rickzeke.github.io/multi-platform-publisher-web/ | ✅ |
+          {rows}
           
           *Auto-checked hourly via GitHub Actions*
-          PAGE
+          """
+          
+          with open("README.md", "w") as f:
+              f.write(readme)
+          PYEOF
       
-      - name: Commit and push status
+      - name: Commit and push
         run: |
           git config user.name "Health Monitor"
           git config user.email "monitor@rickzeke.github"
           git add README.md
-          git diff --quiet || git commit -m "Update health status $(date -u '+%Y-%m-%d %H:%M')"
-          git push origin main 2>&1 || echo "No changes to push"
+          git diff --quiet || git commit -m "Update status $(date -u '+%Y-%m-%d %H:%M')" && git push origin main 2>&1 || echo "No changes"
+      
+      - name: Alert on failure
+        if: steps.check.outputs.all_ok != 'True'
+        run: echo "::warning title=Product Down::Some products returned non-200 status"
