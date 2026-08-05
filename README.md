@@ -1,10 +1,10 @@
 # Product Health Monitor
 
-:white_check_mark: **All Products Healthy** -- Last checked: 2026-08-05 04:09 UTC
+:x: **Products Down!** -- Last checked: 2026-08-05 07:38 UTC
 
 ## Status
 - :white_check_mark: UP 秒转
-- :white_check_mark: UP 社交游戏
+- :x: ERROR 社交游戏
 - :white_check_mark: UP AI提示词管理
 - :white_check_mark: UP AI提示词优化
 - :white_check_mark: UP AI英语助手
@@ -16,7 +16,7 @@
 | Product | URL | Status |
 |---------|-----|--------|
 | 秒转 | [https://rickzeke.github.io/miaozhuan-web/](https://rickzeke.github.io/miaozhuan-web/) | :white_check_mark: |
-| 社交游戏 | [https://rickzeke.github.io/social-game-web/](https://rickzeke.github.io/social-game-web/) | :white_check_mark: |
+| 社交游戏 | [https://rickzeke.github.io/social-game-web/](https://rickzeke.github.io/social-game-web/) | :x: |
 | AI提示词管理 | [https://rickzeke.github.io/ai-productivity-web/](https://rickzeke.github.io/ai-productivity-web/) | :white_check_mark: |
 | AI提示词优化 | [https://rickzeke.github.io/ai-prompt-pro-web/](https://rickzeke.github.io/ai-prompt-pro-web/) | :white_check_mark: |
 | AI英语助手 | [https://rickzeke.github.io/ai-english-web/](https://rickzeke.github.io/ai-english-web/) | :white_check_mark: |
