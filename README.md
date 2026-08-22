@@ -1,12 +1,12 @@
 # Product Health Monitor
 
-:white_check_mark: **All Products Healthy** -- Last checked: 2026-08-22 06:39 UTC
+:x: **Products Down!** -- Last checked: 2026-08-22 07:31 UTC
 
 ## Status
 - :white_check_mark: UP 秒转
 - :white_check_mark: UP 社交游戏
 - :white_check_mark: UP AI提示词管理
-- :white_check_mark: UP AI提示词优化
+- :x: ERROR AI提示词优化
 - :white_check_mark: UP AI英语助手
 - :white_check_mark: UP 歌词卡拉OK
 - :white_check_mark: UP AI生活模拟器
@@ -18,7 +18,7 @@
 | 秒转 | [https://rickzeke.github.io/miaozhuan-web/](https://rickzeke.github.io/miaozhuan-web/) | :white_check_mark: |
 | 社交游戏 | [https://rickzeke.github.io/social-game-web/](https://rickzeke.github.io/social-game-web/) | :white_check_mark: |
 | AI提示词管理 | [https://rickzeke.github.io/ai-productivity-web/](https://rickzeke.github.io/ai-productivity-web/) | :white_check_mark: |
-| AI提示词优化 | [https://rickzeke.github.io/ai-prompt-pro-web/](https://rickzeke.github.io/ai-prompt-pro-web/) | :white_check_mark: |
+| AI提示词优化 | [https://rickzeke.github.io/ai-prompt-pro-web/](https://rickzeke.github.io/ai-prompt-pro-web/) | :x: |
 | AI英语助手 | [https://rickzeke.github.io/ai-english-web/](https://rickzeke.github.io/ai-english-web/) | :white_check_mark: |
 | 歌词卡拉OK | [https://rickzeke.github.io/lyrics-sync-web/](https://rickzeke.github.io/lyrics-sync-web/) | :white_check_mark: |
 | AI生活模拟器 | [https://rickzeke.github.io/ai-life-simulator-web/](https://rickzeke.github.io/ai-life-simulator-web/) | :white_check_mark: |
